@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📡</text></svg>">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Kang Scalping/Swing - Unified Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script id="tailwind-config">
+    tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "secondary": "#3B82F6", "tertiary": "#10B981", "error": "#EF4444", "surface-container-lowest": "#ffffff", "surface-container-low": "#f8fafc", "surface-container": "#f1f5f9", "outline": "#E2E8F0", "outline-variant": "#cbd5e1", "on-surface": "#0f172a", "on-surface-variant": "#64748b", "background": "#F8FAFC" }, "fontFamily": { "body-sm": ["Inter", "sans-serif"], "label-bold": ["Inter", "sans-serif"], "label-mono": ["JetBrains Mono", "monospace"], "display": ["Inter", "sans-serif"], "headline-md": ["Inter", "sans-serif"] } } } }
+</script>
+<style>
+    body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #0f172a; overflow: hidden; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+    .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid #E2E8F0; }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+    @keyframes fadeInSlideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInSlideRight { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes slideInRightToast { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes statusPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.6; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .animate-fade-up { animation: fadeInSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    .animate-fade-right { animation: fadeInSlideRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    .toast-animation { animation: slideInRightToast 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .status-dot-pulse { animation: statusPulse 2s infinite ease-in-out; }
+    .spinner { animation: spin 1s linear infinite; }
+    .hover-lift { transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+    .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05); }
+    .delay-100 { animation-delay: 50ms; } .delay-200 { animation-delay: 100ms; } .delay-300 { animation-delay: 150ms; } .delay-400 { animation-delay: 200ms; }
+    .app-layout { display: flex; height: 100vh; overflow: hidden; }
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; margin-left: 16rem; }
+    .scrollable-area { flex: 1; overflow-y: auto; padding: 1.5rem; }
+    @media (max-width: 768px) { .main-content { margin-left: 0; } .sidebar { display: none; } }
+</style>
+</head>
+<body onclick="initAudio()">
+<div class="app-layout">
+
+    <aside class="sidebar flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface-container-lowest border-r border-outline py-6 px-4 z-50">
+        <div class="mb-8 px-4 animate-fade-right">
+            <h1 class="font-display text-2xl font-bold text-secondary tracking-tight" id="appTitle">Kang Scalping</h1>
+            <p class="text-on-surface-variant text-xs font-semibold uppercase tracking-wider mt-1" id="appSubtitle">Whale Hunter v7.3</p>
+        </div>
+
+        <button onclick="switchMode()" id="modeToggleBtn" class="mx-4 mb-6 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-secondary text-white text-xs font-bold uppercase tracking-wide hover:opacity-90 transition-all cursor-pointer">
+            <span class="material-symbols-outlined text-[16px]">sync_alt</span>
+            <span id="modeToggleLabel">Ganti ke Swing Mode</span>
+        </button>
+        
+        <div class="mx-4 mb-6 p-4 rounded-xl bg-surface-container-low border border-outline animate-fade-right delay-100">
+            <div class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mb-1">Bitcoin Futures</div>
+            <div class="font-label-mono text-xl font-bold text-on-surface" id="btcPrice">—</div>
+            <div class="flex items-center gap-2 mt-2">
+                <span id="btcTrendBadge" class="text-[10px] font-bold px-2 py-1 rounded bg-surface-container">● NEUTRAL</span>
+            </div>
+            <div class="mt-2 pt-2 border-t border-outline">
+                <span id="regimeBadge" class="text-[10px] font-bold px-2 py-1 rounded bg-surface-container inline-block">Regime: Mendeteksi...</span>
+            </div>
+            <div class="text-[9px] text-on-surface-variant mt-2 pt-2 border-t border-outline" id="markovBadge">Markov: Active</div>
+        </div>
+
+        <nav class="flex-1 space-y-2 overflow-y-auto custom-scrollbar">
+            <a onclick="switchTab('dashboard')" id="nav-dashboard" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-50 text-secondary border-r-4 border-secondary transition-all cursor-pointer animate-fade-right delay-100">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="text-sm font-semibold">Live Signals</span>
+            </a>
+            <a onclick="switchTab('history')" id="nav-history" class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all cursor-pointer animate-fade-right delay-200">
+                <span class="material-symbols-outlined">history</span>
+                <span class="text-sm font-semibold">History</span>
+            </a>
+            <a onclick="switchTab('stats')" id="nav-stats" class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all cursor-pointer animate-fade-right delay-300">
+                <span class="material-symbols-outlined">monitoring</span>
+                <span class="text-sm font-semibold">Analytics</span>
+            </a>
+        </nav>
+        
+        <div class="pt-4 border-t border-outline text-center animate-fade-right delay-400">
+            <div class="text-[10px] text-on-surface-variant mb-2 font-bold" id="cloudStatus">☁️ Connecting...</div>
+            <button onclick="loadGHHistory()" class="w-full py-2 bg-surface-container-low hover:bg-outline border border-outline rounded-lg text-xs font-semibold text-on-surface transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[16px]">sync</span> Sync GitHub
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content relative">
+        <header class="h-16 px-6 bg-surface-container-lowest/90 backdrop-blur-md border-b border-outline flex justify-between items-center z-40 shrink-0">
+            <div class="flex items-center gap-4">
+                <h2 class="font-display text-lg font-bold text-on-surface" id="pageTitle">Dashboard</h2>
+                <div class="hidden lg:flex items-center gap-2 bg-surface-container-low border border-outline rounded-full px-3 py-1">
+                    <span id="scanIndicatorDot" class="w-2 h-2 rounded-full bg-tertiary status-dot-pulse"></span>
+                    <span id="scanIndicatorText" class="text-xs font-semibold text-on-surface-variant">Scanning Active</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <button id="latestTradeBtn" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border border-outline bg-surface-container-low text-on-surface-variant transition-all hover:bg-outline" onclick="switchTab('history')">
+                    <span id="latestTradeIcon" class="material-symbols-outlined text-[16px]">notifications</span>
+                    <span id="latestTradeText">Menunggu Sinyal...</span>
+                </button>
+                <span class="text-[11px] text-on-surface-variant font-label-mono hidden sm:block" id="lastUpd">Syncing...</span>
+                <button id="scanBtn" onclick="scan()" class="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-blue-600 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                    <span class="material-symbols-outlined text-[18px]">radar</span> Scan Now
+                </button>
+            </div>
+        </header>
+
+        <div class="fixed top-20 right-6 z-[60] flex flex-col gap-2" id="toast-container"></div>
+
+        <div class="scrollable-area custom-scrollbar">
+            <div class="max-w-[1600px] mx-auto space-y-6">
+
+                <!-- DASHBOARD VIEW -->
+                <div id="view-dashboard" class="block">
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-6 animate-fade-up">
+                        <div class="flex flex-wrap gap-2" id="statsBar"></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        <div class="lg:col-span-3">
+                            <div id="signals-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+                        </div>
+                        <aside class="lg:col-span-1 space-y-6">
+                            <div class="bg-surface-container-lowest border border-outline rounded-xl p-4 flex flex-col hover-lift animate-fade-up delay-300">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="font-display font-semibold text-on-surface">News & Calendar</h3>
+                                    <button onclick="refreshNews()" class="p-1 rounded hover:bg-surface-container-low text-on-surface-variant transition-colors cursor-pointer"><span class="material-symbols-outlined text-[18px]">refresh</span></button>
+                                </div>
+                                <div id="news-container" class="space-y-4"></div>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+
+                <!-- HISTORY VIEW -->
+                <div id="view-history" class="hidden">
+                    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 animate-fade-up">
+                        <div>
+                            <h2 class="font-display text-2xl font-bold text-on-surface">Closed Trade History</h2>
+                            <p class="text-on-surface-variant text-sm mt-1">Sistem P&L Net (Termasuk estimasi Fee & Funding).</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="flex bg-surface-container-lowest border border-outline rounded-lg p-1">
+                                <button onclick="setHF('ALL')" id="btn-hf-all" class="px-4 py-1.5 text-xs font-semibold bg-surface-container rounded shadow-sm text-on-surface">All</button>
+                                <button onclick="setHF('WIN')" id="btn-hf-win" class="px-4 py-1.5 text-xs font-semibold text-on-surface-variant hover:bg-surface-container rounded transition-all">🟢 WIN</button>
+                                <button onclick="setHF('LOSS')" id="btn-hf-loss" class="px-4 py-1.5 text-xs font-semibold text-on-surface-variant hover:bg-surface-container rounded transition-all">🔴 LOSS</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-xl border border-outline overflow-hidden animate-fade-up delay-200">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left whitespace-nowrap">
+                                <thead>
+                                    <tr class="bg-surface-container-low border-b border-outline">
+                                        <th class="px-4 py-3 font-semibold text-[11px] text-on-surface-variant uppercase cursor-pointer hover:text-on-surface" onclick="srtH('pair')">Pair ↕</th>
+                                        <th class="px-4 py-3 font-semibold text-[11px] text-on-surface-variant uppercase">Dir</th>
+                                        <th class="px-4 py-3 font-semibold text-[11px] text-on-surface-variant uppercase text-right">Entry</th>
+                                        <th class="px-4 py-3 font-semibold text-[11px] text-on-surface-variant uppercase text-right">TP / SL</th>
+                                        <th class="px-4 py-3 font-semibold text-[11px] text-on-surface-variant uppercase text-center cursor-pointer hover:text-on-surface" onclick="srtH('result')">Result ↕</th>
+                                        <th class="px-4 py-3 font-semibold text-[11px] text-on-surface-variant uppercase text-right">Net ROI</th>
+                                        <th class="px-4 py-3 font-semibold text-[11px] text-on-surface-variant uppercase text-center">Score</th>
+                                        <th class="px-4 py-3 font-semibold text-[11px] text-on-surface-variant uppercase cursor-pointer hover:text-on-surface" onclick="srtH('closeTime')">Closed WIB ↕</th>
+                                        <th class="px-4 py-3 font-semibold text-[11px] text-on-surface-variant uppercase">Labels</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-outline" id="history-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STATS VIEW (FIXED: Best Pairs, Hourly P&L, and Calendar Added) -->
+                <div id="view-stats" class="hidden">
+                    <div class="grid grid-cols-12 gap-6">
+                        <!-- Card 1: Position Sizing -->
+                        <div class="col-span-12 bg-surface-container-lowest border border-outline rounded-xl p-5 hover-lift animate-fade-up delay-100">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="material-symbols-outlined text-secondary text-[18px]">calculate</span>
+                                <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Position Sizing & Risk Management</span>
+                            </div>
+                            <p class="text-[10px] text-on-surface-variant mb-4">Ubah persentase ini untuk melihat saran jumlah margin yang aman (Margin Sug) di panel Live Signals.</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
+                                <div>
+                                    <label class="block text-[10px] text-on-surface-variant font-bold uppercase mb-1">Total Balance (USDT)</label>
+                                    <input id="setBalance" type="number" min="0" step="1" class="w-full px-3 py-2 text-sm rounded-lg border border-outline bg-surface-container-low font-label-mono" oninput="updateSettings()">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] text-on-surface-variant font-bold uppercase mb-1">Risk per Trade (%)</label>
+                                    <input id="setRisk" type="number" min="0.1" max="10" step="0.1" class="w-full px-3 py-2 text-sm rounded-lg border border-outline bg-surface-container-low font-label-mono" oninput="updateSettings()">
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-outline max-w-md">
+                                <label class="block text-[10px] text-on-surface-variant font-bold uppercase mb-1">GitHub Token (buat sync CSV)</label>
+                                <input id="setGhToken" type="password" placeholder="ghp_xxxxxxxxxxxx" class="w-full px-3 py-2 text-sm rounded-lg border border-outline bg-surface-container-low font-label-mono" oninput="updateGhToken()">
+                                <p class="text-[9px] text-on-surface-variant mt-1">Disimpan cuma di browser lo (localStorage), gak pernah ketulis ke source code / ke-push ke GitHub.</p>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Overall Win Rate -->
+                        <div class="col-span-12 md:col-span-3 bg-surface-container-lowest border border-outline rounded-xl p-5 hover-lift animate-fade-up delay-200 flex flex-col">
+                            <div class="flex items-center gap-2 mb-4"><span class="material-symbols-outlined text-secondary text-[18px]">pie_chart</span><span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Overall Win Rate</span></div>
+                            <div class="flex-1 flex flex-col items-center justify-center" id="stat-overall-pie"></div>
+                        </div>
+
+                        <!-- Card 2b: Daily Win Rate (Hari Ini) -->
+                        <div class="col-span-12 md:col-span-3 bg-surface-container-lowest border border-outline rounded-xl p-5 hover-lift animate-fade-up delay-200 flex flex-col">
+                            <div class="flex items-center gap-2 mb-4"><span class="material-symbols-outlined text-secondary text-[18px]">today</span><span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Win Rate Hari Ini</span></div>
+                            <div class="flex-1 flex flex-col items-center justify-center" id="stat-daily-pie"></div>
+                        </div>
+                        
+                        <!-- Card 3: Best Pairs -->
+                        <div class="col-span-12 md:col-span-3 bg-surface-container-lowest border border-outline rounded-xl p-5 hover-lift animate-fade-up delay-300 flex flex-col">
+                            <div class="flex items-center gap-2 mb-4"><span class="material-symbols-outlined text-secondary text-[18px]">trophy</span><span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Best Pairs</span></div>
+                            <div class="space-y-3 flex-1 flex flex-col justify-center" id="stat-top-pairs"></div>
+                        </div>
+                        
+                        <!-- Card 4: Hourly P&L -->
+                        <div class="col-span-12 bg-surface-container-lowest border border-outline rounded-xl p-5 hover-lift animate-fade-up delay-400 flex flex-col">
+                            <div class="flex items-center gap-2 mb-4"><span class="material-symbols-outlined text-secondary text-[18px]">schedule</span><span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Hourly Performance (WIB)</span></div>
+                            <div class="flex flex-col justify-end">
+                                <div class="flex items-end gap-[2px] h-32 w-full" id="stat-hourly-bars"></div>
+                                <div class="flex justify-between text-[9px] text-on-surface-variant mt-2 font-label-mono"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span></div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-outline">
+                                <div class="text-[10px] font-bold text-on-surface-variant uppercase mb-2">Detail per Jam (cuma jam yang udah ada trade)</div>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2" id="stat-hourly-detail"></div>
+                            </div>
+                        </div>
+
+                        <!-- Card 4b: Score Validation (RESTORED) -->
+                        <div class="col-span-12 bg-surface-container-lowest border border-outline rounded-xl p-5 hover-lift animate-fade-up delay-500">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="material-symbols-outlined text-secondary text-[18px]">rule</span>
+                                <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Score Validation</span>
+                            </div>
+                            <p class="text-[10px] text-on-surface-variant mb-4">Cek apakah tier/score AI beneran berkorelasi sama win-rate. Kalau ULTRA_HIGH tidak jelas lebih tinggi dari MEDIUM, berarti bobot skor perlu dikalibrasi ulang.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <div class="text-[10px] font-bold text-on-surface-variant uppercase mb-2">Win-Rate per Tier</div>
+                                    <div class="space-y-2" id="stat-tier-validation"></div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-on-surface-variant uppercase mb-2">Win-Rate per RSI Tier</div>
+                                    <div class="space-y-2" id="stat-rsitier-validation"></div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-on-surface-variant uppercase mb-2">Win-Rate per Ukuran SL</div>
+                                    <div class="space-y-2" id="stat-slsize-validation"></div>
+                                </div>
+                            </div>
+                            <div class="mt-6 pt-6 border-t border-outline">
+                                <div class="text-[10px] font-bold text-on-surface-variant uppercase mb-2">SMC & Indicator Success Rate</div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2" id="stat-smc-tech"></div>
+                            </div>
+                        </div>
+
+                        <!-- Card 5: Calendar (NEWLY RESTORED) -->
+                        <div class="col-span-12 bg-surface-container-lowest border border-outline rounded-xl p-5 hover-lift animate-fade-up delay-500">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-secondary text-[18px]">calendar_month</span>
+                                    <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Trading Calendar</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <button onclick="navCal(-1)" class="p-1 rounded hover:bg-surface-container-low transition-colors"><span class="material-symbols-outlined text-[16px]">chevron_left</span></button>
+                                    <span id="calMonthYear" class="text-xs font-bold text-on-surface font-label-mono min-w-[80px] text-center"></span>
+                                    <button onclick="navCal(1)" class="p-1 rounded hover:bg-surface-container-low transition-colors"><span class="material-symbols-outlined text-[16px]">chevron_right</span></button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-7 gap-1 text-center mb-2">
+                                <div class="text-[10px] font-bold text-on-surface-variant">Sun</div>
+                                <div class="text-[10px] font-bold text-on-surface-variant">Mon</div>
+                                <div class="text-[10px] font-bold text-on-surface-variant">Tue</div>
+                                <div class="text-[10px] font-bold text-on-surface-variant">Wed</div>
+                                <div class="text-[10px] font-bold text-on-surface-variant">Thu</div>
+                                <div class="text-[10px] font-bold text-on-surface-variant">Fri</div>
+                                <div class="text-[10px] font-bold text-on-surface-variant">Sat</div>
+                            </div>
+                            <div id="stat-calendar-grid" class="grid grid-cols-7 gap-1 lg:gap-2"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div> 
+        </div> 
+    </main>
+</div>
+
+<script>
+'use strict';
+
+/* ── Web Audio API ── */
+let audioCtx = null;
+function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if(audioCtx.state === 'suspended') audioCtx.resume(); }
+function playTone(type) {
+    if(!audioCtx) return; if(audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    if (type === 'NEW_SIGNAL') {
+        osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.setValueAtTime(1200, now + 0.1);
+        gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.3, now + 0.05); gain.gain.linearRampToValueAtTime(0, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+    } else if (type === 'WIN') {
+        osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.setValueAtTime(783.99, now + 0.2);
+        gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.3, now + 0.05); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        osc.start(now); osc.stop(now + 0.5);
+    } else if (type === 'LOSS') {
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(100, now + 0.4);
+        gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.2, now + 0.05); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        osc.start(now); osc.stop(now + 0.4);
+    }
+}
+
+/* ── UI Logic & Formatters ── */
+let currentTab = 'dashboard';
+function switchTab(tabId) {
+    currentTab = tabId;
+    ['dashboard', 'history', 'stats'].forEach(id => {
+        const view = document.getElementById(`view-${id}`); const nav = document.getElementById(`nav-${id}`);
+        if(view) { view.classList.toggle('hidden', id !== tabId); view.classList.toggle('block', id === tabId); }
+        if(nav) nav.className = id === tabId ? "flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-50 text-secondary border-r-4 border-secondary transition-all cursor-pointer" : "flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-all cursor-pointer";
+    });
+    if(tabId === 'history') renderHistory(); if(tabId === 'stats') renderStats();
+}
+
+function showToast(title, msg, type) {
+    const container = document.getElementById('toast-container'); const toast = document.createElement('div');
+    toast.className = 'toast-animation bg-surface-container-lowest border-l-4 p-4 rounded shadow-lg flex items-center gap-3 glass-card ' + (type === 'WIN' ? 'border-tertiary' : type === 'LOSS' ? 'border-error' : 'border-secondary');
+    const iconStr = type === 'WIN' ? '<span class="material-symbols-outlined text-tertiary">trending_up</span>' : type === 'LOSS' ? '<span class="material-symbols-outlined text-error">warning</span>' : '<span class="material-symbols-outlined text-secondary">info</span>';
+    const bgClass = type === 'WIN' ? 'bg-green-50' : type === 'LOSS' ? 'bg-red-50' : 'bg-blue-50';
+    toast.innerHTML = `<div class="w-8 h-8 rounded-full ${bgClass} flex items-center justify-center shrink-0">${iconStr}</div><div><p class="text-xs font-bold text-on-surface">${title}</p><p class="text-[11px] text-on-surface-variant mt-0.5">${msg}</p></div>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(20px)'; toast.style.transition = 'all 0.4s'; setTimeout(() => toast.remove(), 400); }, 5000);
+}
+
+function updateLatestTradeBtn(sig) {
+    const btn = document.getElementById('latestTradeBtn'); const text = document.getElementById('latestTradeText'); const icon = document.getElementById('latestTradeIcon');
+    if(!btn || !sig) return;
+    const dur = Math.max(1, Math.round((sig.closeTime - sig.entryTime)/60000));
+    btn.className = `flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${sig.result==='WIN'?'bg-green-50 text-tertiary border-green-200':'bg-red-50 text-error border-red-200'} animate-bounce`;
+    icon.textContent = sig.result==='WIN' ? 'trending_up' : 'trending_down';
+    text.innerHTML = `#${sig.pair.replace('USDT','')} Hit ${sig.result==='WIN'?'TP 🟢':'SL 🔴'} (${dur}m)`;
+    setTimeout(() => btn.classList.remove('animate-bounce'), 3000);
+}
+
+function fmtP(n){return n<0.01?n.toFixed(5):n<1?n.toFixed(4):n<100?n.toFixed(3):n.toFixed(2);}
+function toWIBShort(ts){var d=new Date(ts),utc=d.getTime()+d.getTimezoneOffset()*60000,w=new Date(utc+7*3600000);return String(w.getDate()).padStart(2,'0')+'/'+String(w.getMonth()+1).padStart(2,'0')+' '+String(w.getHours()).padStart(2,'0')+':'+String(w.getMinutes()).padStart(2,'0');}
+function wibDateKey(ts){var d=new Date(ts),utc=d.getTime()+d.getTimezoneOffset()*60000,w=new Date(utc+7*3600000);return w.getFullYear()+'-'+String(w.getMonth()+1).padStart(2,'0')+'-'+String(w.getDate()).padStart(2,'0');}
+function wibHour(ts){var d=new Date(ts),utc=d.getTime()+d.getTimezoneOffset()*60000,w=new Date(utc+7*3600000);return w.getHours();}
+function gid(){return Math.random().toString(36).substr(2,15);}
+function getLeverage(sym){return sym==='BTCUSDT'||sym==='ETHUSDT'?cfg().leverageMajor:cfg().leverageAlt;}
+function calcROI(pct,sym){return +(pct*getLeverage(sym)).toFixed(2);}
+
+/* ── Config & State ── */
+const BINANCE_BASE = 'https://fapi.binance.com/fapi/v1';
+const FG_API       = 'https://api.alternative.me/fng/?limit=1';
+const JBIN_KEY     = '$2a$10$S6p.W/a5lo1vVWLADK4.OOrXU53s8dW8T3ppnGsFg3k05UZffr0yO'; 
+const GH_USER      = 'kangscalpingv3';
+const GH_REPO      = 'kangscalping';
+// SECURITY FIX: GH_TOKEN dulu hardcoded langsung di source -- ini yang bikin
+// GitHub push protection nolak push (secret scanning ketauan ada token literal
+// di kode). Sekarang token DIAMBIL dari localStorage (diisi lewat field di tab
+// Analytics), jadi gak pernah nempel di source code / ke-commit ke git lagi.
+function ghToken() { return localStorage.getItem('gh_token') || ''; }
+
+const PROXIES = [
+    url => url,
+    url => 'https://binance-proxy.kangscalpingv3.workers.dev/?url=' + encodeURIComponent(url),
+    url => 'https://corsproxy.io/?url=' + encodeURIComponent(url),
+    url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+    url => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url)
+];
+let activeProxy = 0;
+
+// ── MODE CONFIG: satu file, dua strategi. Ganti lewat tombol "Ganti ke Swing/
+// Scalping Mode" di sidebar. Tiap mode punya storage, CSV, dan cloud-bin
+// SENDIRI-SENDIRI (prefix beda) biar sinyal & histori dua strategi ini gak
+// pernah nyampur satu sama lain.
+const MODE_CONFIG = {
+    SCALP: {
+        label: 'Kang Scalping', badge: 'Whale Hunter v7.3',
+        tfEntry: '5m', tfEntryLimit: 50, tfMid: '15m', tfMidLimit: 3, tfDaily: '1d', tfDailyLimit: 3,
+        btcTf: '5m', btcLimit: 60,
+        cooldown: 30*60*1000, postTradeCooldown: 2*60*60*1000, maxSig: 10, maxSameDir: 4,
+        atrMin: 0.2, slMult: 1.2, slFloor: 1.2, slCap: 4.0, rr: 1.6,
+        hardTrendBlock: false,
+        leverageMajor: 50, leverageAlt: 20,
+        scanInterval: 60000,
+        storagePrefix: 'ks_', csvFile: 'trades.csv', binName: 'kang-scalping-v7.3'
+    },
+    SWING: {
+        label: 'Kang Swing', badge: 'Trend Rider v1.0 (1H/4H, 3-5x)',
+        tfEntry: '1h', tfEntryLimit: 60, tfMid: '4h', tfMidLimit: 20, tfDaily: '1d', tfDailyLimit: 10,
+        btcTf: '4h', btcLimit: 60,
+        cooldown: 4*60*60*1000, postTradeCooldown: 12*60*60*1000, maxSig: 6, maxSameDir: 3,
+        atrMin: 0.3, slMult: 1.5, slFloor: 2.5, slCap: 8.0, rr: 2.5,
+        hardTrendBlock: true,
+        leverageMajor: 5, leverageAlt: 3,
+        scanInterval: 5*60000,
+        storagePrefix: 'ksw_', csvFile: 'trades_swing.csv', binName: 'kang-swing-v1.0'
+    }
+};
+let MODE = localStorage.getItem('ks_mode') || 'SCALP';
+function cfg() { return MODE_CONFIG[MODE]; }
+function skey(suffix) { return cfg().storagePrefix + suffix; }
+
+function loadState() {
+    return {
+        signals: JSON.parse(localStorage.getItem(skey('s')) || '[]'),
+        history: JSON.parse(localStorage.getItem(skey('h')) || '[]'),
+        qTable: JSON.parse(localStorage.getItem(skey('q')) || '{}'),
+        markov: JSON.parse(localStorage.getItem(skey('m')) || '{ "transitions": {}, "lastState": null, "nextTrend": null }'),
+        settings: JSON.parse(localStorage.getItem(skey('set')) || '{"balance": 1000, "riskPct": 1}'),
+    };
+}
+
+const S = Object.assign({
+    btcTrend: 'NEUTRAL', btcPrice: 0, marketRegime: 'UNKNOWN', marketADX: null,
+    symbols: [], scanning: false,
+    histFilter: 'ALL', histSort: {key:'closeTime', dir:'desc'},
+    news: [], newsLoading: false
+}, loadState());
+
+let JBIN_ID = localStorage.getItem(skey('binid'));
+if (JBIN_ID === "1" || JBIN_ID === "null") JBIN_ID = null;
+
+const BLOCKED = new Set(['BTCUSDT','ETHUSDT','BNBUSDT','SOLUSDT','AVAXUSDT','LINKUSDT','UNIUSDT']);
+const SLIPPAGE_PCT = 0.05; 
+const TAKER_FEE_PCT = 0.10; 
+// NEW: begitu profit floating nyampe sekian % dari jarak ke TP, SL digeser ke
+// entry (breakeven). Ini pure position management, nggak nyentuh keputusan
+// entry sama sekali, jadi nggak pernah ngurangin jumlah sinyal yang muncul.
+const BREAKEVEN_TRIGGER_PCT = 0.5;
+let lastSigByPair = {}, lastTradeByPair = {};
+
+/* ── DB Handlers ── */
+
+function saveLocal() {
+    localStorage.setItem(skey('s'), JSON.stringify(S.signals));
+    localStorage.setItem(skey('h'), JSON.stringify(S.history.slice(0,300)));
+    localStorage.setItem(skey('q'), JSON.stringify(S.qTable));
+    localStorage.setItem(skey('m'), JSON.stringify(S.markov));
+    localStorage.setItem(skey('set'), JSON.stringify(S.settings));
+}
+
+async function saveCloud() {
+    try {
+        const p = {v:cfg().binName, signals:S.signals, history:S.history.slice(0,300), qTable:S.qTable, markov:S.markov, settings:S.settings, updatedAt:Date.now()};
+        if (!JBIN_ID || JBIN_ID.length < 5) {
+            const r = await fetch('https://api.jsonbin.io/v3/b', {
+                method:'POST', 
+                headers:{'Content-Type':'application/json','X-Master-Key':JBIN_KEY,'X-Bin-Name':cfg().binName,'X-Bin-Private':'true'}, 
+                body:JSON.stringify(p)
+            });
+            const d = await r.json(); 
+            if(d.metadata) { JBIN_ID = d.metadata.id; localStorage.setItem(skey('binid'), JBIN_ID); }
+        } else {
+            await fetch('https://api.jsonbin.io/v3/b/'+JBIN_ID, {method:'PUT', headers:{'Content-Type':'application/json','X-Master-Key':JBIN_KEY}, body:JSON.stringify(p)});
+        }
+        if(document.getElementById('cloudStatus')) document.getElementById('cloudStatus').innerHTML = '☁️ Cloud Synced';
+    } catch(e) { 
+        if(document.getElementById('cloudStatus')) document.getElementById('cloudStatus').innerHTML = '💻 Local Storage Active'; 
+    }
+}
+let saveTimer = null;
+function save() { saveLocal(); clearTimeout(saveTimer); saveTimer = setTimeout(saveCloud, 3000); }
+
+async function loadGHHistory() {
+    try {
+        const r = await fetch(`https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/${cfg().csvFile}?t=${Date.now()}`);
+        if (!r.ok) throw new Error();
+        const txt = await r.text(); const lines = txt.trim().split('\n'); if (lines.length < 2) return;
+        const header = lines[0].split(',').map(h=>h.trim());
+        let skippedRows = 0;
+        const ghTrades = lines.slice(1).map(line => {
+            const cols = line.split(',').map(c=>c.trim().replace(/^"|"$/g,''));
+            // FIX: dulu baris dengan jumlah kolom beda dari header (baris lama dari versi
+            // script sebelumnya) tetap dipetakan mentah-mentah, bikin kolom geser -- misal
+            // 'labels' ketimpa isi 'entryTime'/'closeTime' (angka timestamp nyasar ke UI).
+            // Sekarang baris yang jumlah kolomnya nggak cocok di-skip, bukan dipaksa parse.
+            if (cols.length !== header.length) { skippedRows++; return null; }
+            const obj = {}; header.forEach((h,i)=>obj[h]=cols[i]);
+            // Sanitasi tambahan: buang entry label yang murni angka (timestamp nyasar),
+            // tag SMC/RSI asli selalu berupa teks (contoh: "RSI T1", "FVG", "BOS").
+            const rawLabels = (obj.labels||'').split('|').filter(Boolean);
+            const cleanLabels = rawLabels.filter(t => !/^\d+$/.test(t));
+            return { id:obj.id, pair:obj.pair, dir:obj.dir, entry:+obj.entry, tp:+obj.tp, sl:+obj.sl, tpPct:obj.tpPct, slPct:obj.slPct, result:obj.result, profitPct:+obj.profitPct||0, roiPct:obj.roiPct?+obj.roiPct:+(obj.profitPct*(obj.leverage||20)).toFixed(2), leverage:+obj.leverage||20, rsiTierStr:obj.rsiTierStr||'T3', score:+obj.score||0, tier:obj.tier||'LOW', labels:cleanLabels, entryTime:+obj.entryTime||0, closeTime:+obj.closeTime||0 };
+        }).filter(t=>t && (t.result==='WIN'||t.result==='LOSS'));
+        if (skippedRows > 0) console.warn(`GH CSV: ${skippedRows} baris lama diskip (schema kolom beda/legacy).`);
+
+        const existingIds = new Set(S.history.map(h=>h.id));
+        const newTrades = ghTrades.filter(t=>!existingIds.has(t.id));
+        if (newTrades.length > 0) {
+            S.history = [...S.history, ...newTrades].sort((a,b)=>b.closeTime-a.closeTime).slice(0,300);
+            save(); showToast('Sync Complete', `${newTrades.length} trades pulled from GitHub`, 'INFO');
+            renderHeader(); if(currentTab==='history') renderHistory(); if(currentTab==='stats') renderStats();
+        }
+    } catch(e) { console.error('GH Load Error', e); }
+}
+
+async function appendTradeToGitHubCSV(trade) {
+    if (!ghToken()) { showToast('GitHub Skip', 'Token belum diisi di tab Analytics -> Settings.', 'INFO'); return; }
+    try {
+        const f = cfg().csvFile;
+        const resGet = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${f}`, { headers: { 'Authorization': `token ${ghToken()}` } });
+        if (!resGet.ok) throw new Error("Gagal ngambil CSV. Cek Token lu!");
+        const fileData = await resGet.json();
+        const existingCsv = decodeURIComponent(escape(atob(fileData.content)));
+        const labelsStr = (trade.labels || []).join('|');
+        const newRow = `\n"${trade.id}","${trade.pair}","${trade.dir}",${trade.entry},${trade.tp},${trade.sl},"${trade.tpPct}","${trade.slPct}","${trade.result}",${trade.profitPct},${trade.roiPct},${trade.leverage},"${trade.rsiTierStr}",${trade.score},"${trade.tier}","${labelsStr}",${trade.entryTime},${trade.closeTime}`;
+        
+        const resPut = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${f}`, {
+            method: 'PUT', headers: { 'Authorization': `token ${ghToken()}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: `📝 Trade closed: ${trade.pair} ${trade.result}`, content: btoa(unescape(encodeURIComponent(existingCsv + newRow))), sha: fileData.sha })
+        });
+        
+        if(!resPut.ok) throw new Error("Gagal push ke GitHub!");
+        showToast('GitHub Pushed', `Data ${trade.pair} sukses masuk ke CSV!`, 'INFO');
+    } catch (e) { 
+        console.error("GitHub Push Error:", e); 
+        showToast('GitHub Error', 'Gagal nge-push ke CSV. Cek Token lu!', 'LOSS');
+    }
+}
+
+/* ── Calculation & Data API ── */
+async function bFetch(ep) {
+    for (let i=activeProxy; i<PROXIES.length; i++) {
+        try { const r = await fetch(PROXIES[i](BINANCE_BASE+'/'+ep), {signal:AbortSignal.timeout(7000)}); if(!r.ok) throw new Error(); activeProxy=i; return JSON.parse(await r.text()); } 
+        catch(e) { if(i===PROXIES.length-1) throw e; }
+    }
+}
+function isB(s) { const base = s.replace(/USDT$/,''); return BLOCKED.has(s) || /USD[A-Z0-9]{0,3}$/.test(base) || /^[A-Z]{0,3}USD/.test(base) || /^XA[UG]/.test(base); }
+function normK(l) { return l.map(k=>({time:+k[0],open:+k[1],high:+k[2],low:+k[3],close:+k[4],volume:+k[5]})); }
+function calcATR(c,p=14) {
+    if(c.length<p+1) return 0; let trs=[];
+    for(let i=1;i<c.length;i++) trs.push(Math.max(c[i].high-c[i].low, Math.abs(c[i].high-c[i-1].close), Math.abs(c[i].low-c[i-1].close)));
+    return trs.slice(-p).reduce((a,b)=>a+b)/p;
+}
+// ── NEW: ADX (Average Directional Index) — ngukur KEKUATAN tren, bukan arahnya.
+// ADX<20 = ranging/choppy (kondisi ideal buat strategi RSI mean-reversion),
+// ADX>35 = tren kuat searah (RSI mean-reversion rawan "nangkep pisau jatuh").
+function calcADX(c, p=14) {
+    if(c.length < p*2+1) return null;
+    const plusDM=[], minusDM=[], TR=[];
+    for(let i=1;i<c.length;i++) {
+        const up = c[i].high-c[i-1].high, down = c[i-1].low-c[i].low;
+        plusDM.push(up>down && up>0 ? up : 0);
+        minusDM.push(down>up && down>0 ? down : 0);
+        TR.push(Math.max(c[i].high-c[i].low, Math.abs(c[i].high-c[i-1].close), Math.abs(c[i].low-c[i-1].close)));
+    }
+    function wilderSmooth(arr) {
+        let s = arr.slice(0,p).reduce((a,b)=>a+b,0);
+        const out = [s];
+        for(let i=p;i<arr.length;i++) { s = s - (s/p) + arr[i]; out.push(s); }
+        return out;
+    }
+    const sPlus = wilderSmooth(plusDM), sMinus = wilderSmooth(minusDM), sTR = wilderSmooth(TR);
+    const DX = [];
+    for(let i=0;i<sTR.length;i++) {
+        if(sTR[i]===0) { DX.push(0); continue; }
+        const plusDI = 100*sPlus[i]/sTR[i], minusDI = 100*sMinus[i]/sTR[i];
+        const sum = plusDI+minusDI;
+        DX.push(sum===0 ? 0 : 100*Math.abs(plusDI-minusDI)/sum);
+    }
+    if(DX.length < p) return null;
+    return DX.slice(-p).reduce((a,b)=>a+b,0)/p;
+}
+function getRegime(adx) {
+    if(adx === null) return 'UNKNOWN';
+    if(adx > 35) return 'STRONG_TREND';
+    if(adx > 25) return 'DEVELOPING_TREND';
+    return 'RANGING';
+}
+function calcRSI(cl,p=14) {
+    if(cl.length<p+1) return 50; let g=0,l=0;
+    for(let i=1;i<=p;i++){let d=cl[i]-cl[i-1]; d>0?g+=d:l-=d;}
+    let ag=g/p, al=l/p;
+    for(let j=p+1;j<cl.length;j++){let d=cl[j]-cl[j-1]; ag=(ag*(p-1)+Math.max(d,0))/p; al=(al*(p-1)+Math.max(-d,0))/p;}
+    return al===0 ? (ag===0?50:99) : 100-(100/(1+ag/al));
+}
+function calcBB(cl, p=20, mult=2.5) {
+    if(cl.length<p) return null; let sum=0; for(let i=cl.length-p; i<cl.length; i++) sum+=cl[i];
+    let sma = sum/p; let varSum=0; for(let i=cl.length-p; i<cl.length; i++) varSum+=Math.pow(cl[i]-sma, 2);
+    let sd = Math.sqrt(varSum/p); return { upper: sma+(sd*mult), lower: sma-(sd*mult) };
+}
+function findSMC(candles, price, dir) {
+    let tags = [], score = 0;
+
+    // ── Liquidity Trap (existing) — sekarang cuma nambah skor kalau arahnya SEARAH
+    // sama dir hasil RSI. Dulu ditambah tanpa cek arah, jadi bisa nambah skor ke
+    // sinyal yang sebenarnya berlawanan sama pola yang kedeteksi.
+    const s = candles.slice(-20), lo = s.slice(0,-3);
+    const swingHi = Math.max(...lo.map(c=>c.high)), swingLo = Math.min(...lo.map(c=>c.low));
+    const recent = s.slice(-3);
+    const bullTrap = recent.some(c=>c.high>swingHi*1.001 && c.close<swingHi); // implikasi: SHORT
+    const bearTrap = recent.some(c=>c.low<swingLo*0.999 && c.close>swingLo);  // implikasi: LONG
+    if(bullTrap && dir==='SHORT') { tags.push('Manipulation'); score += 15; }
+    if(bearTrap && dir==='LONG')  { tags.push('Manipulation'); score += 15; }
+
+    // ── Fair Value Gap (existing) — sekarang juga dicek arah gap-nya
+    const r10 = candles.slice(-10);
+    for(let i=0; i<r10.length-2; i++) {
+        const bullGap = r10[i+2].low > r10[i].high && price >= r10[i].high && price <= r10[i+2].low;
+        const bearGap = r10[i+2].high < r10[i].low && price >= r10[i+2].high && price <= r10[i].low;
+        if((bullGap && dir==='LONG') || (bearGap && dir==='SHORT')) {
+            if(!tags.includes('FVG')) { tags.push('FVG'); score += 10; }
+        }
+    }
+
+    // ── NEW: Market Structure -> BOS & CHoCH ──
+    // Deteksi swing high/low (pivot 2 candle kanan-kiri), lalu bandingkan 2 swing
+    // terakhir buat tau strukturnya lagi bullish (higher-high & higher-low) atau
+    // bearish (lower-high & lower-low).
+    const swingHighs = [], swingLows = [];
+    for(let i=2; i<candles.length-2; i++) {
+        const w = candles.slice(i-2, i+3);
+        if(candles[i].high === Math.max(...w.map(c=>c.high))) swingHighs.push({i, price: candles[i].high});
+        if(candles[i].low === Math.min(...w.map(c=>c.low))) swingLows.push({i, price: candles[i].low});
+    }
+    if(swingHighs.length >= 2 && swingLows.length >= 2) {
+        const lastHH = swingHighs[swingHighs.length-1], prevHH = swingHighs[swingHighs.length-2];
+        const lastLL = swingLows[swingLows.length-1], prevLL = swingLows[swingLows.length-2];
+        const structBull = lastHH.price > prevHH.price && lastLL.price > prevLL.price;
+        const structBear = lastHH.price < prevHH.price && lastLL.price < prevLL.price;
+        // CHoCH: struktur sebelumnya bullish tapi harga jebol di bawah swing low
+        // terakhir (atau sebaliknya) -> sinyal reversal, bobot lebih besar dari BOS.
+        if(structBull && price < lastLL.price && dir==='SHORT') { tags.push('CHoCH'); score += 12; }
+        if(structBear && price > lastHH.price && dir==='LONG')  { tags.push('CHoCH'); score += 12; }
+        // BOS: harga breakout searah struktur yang sudah ada -> konfirmasi lanjutan tren.
+        if(structBull && price > lastHH.price && dir==='LONG')  { tags.push('BOS'); score += 8; }
+        if(structBear && price < lastLL.price && dir==='SHORT') { tags.push('BOS'); score += 8; }
+    }
+
+    // ── NEW: Order Block retest ──
+    // Cari candle berlawanan arah terakhir sebelum lonjakan kuat (>1%), lalu cek
+    // apakah harga sekarang lagi retrace balik ke zona candle itu.
+    for(let i=Math.max(1,candles.length-15); i<candles.length-3; i++) {
+        const c = candles[i], after = candles.slice(i+1, i+4);
+        if(after.length<3) continue;
+        const moveUp = (after[after.length-1].close - c.close) / c.close * 100;
+        const moveDown = (c.close - after[after.length-1].close) / c.close * 100;
+        if(c.close < c.open && moveUp > 1.0 && price >= c.low && price <= c.high && dir==='LONG' && !tags.includes('Order Block')) {
+            tags.push('Order Block'); score += 10;
+        }
+        if(c.close > c.open && moveDown > 1.0 && price >= c.low && price <= c.high && dir==='SHORT' && !tags.includes('Order Block')) {
+            tags.push('Order Block'); score += 10;
+        }
+    }
+
+    // ── NEW: Liquidity Sweep (Equal High/Low) ──
+    // Kalau ada 2+ swing high/low yang hampir sama persis (liquidity pool), dan
+    // harga baru aja "nyapu" lewat level itu lalu balik lagi -> classic stop hunt.
+    const sw = candles.slice(-15);
+    let eqHigh = null, eqLow = null;
+    for(let i=0;i<sw.length;i++) for(let j=i+1;j<sw.length;j++) {
+        if(Math.abs(sw[i].high-sw[j].high)/sw[i].high < 0.0015) eqHigh = Math.max(sw[i].high, sw[j].high);
+        if(Math.abs(sw[i].low-sw[j].low)/sw[i].low < 0.0015) eqLow = Math.min(sw[i].low, sw[j].low);
+    }
+    const lastC = candles[candles.length-1];
+    if(eqHigh && lastC.high > eqHigh*1.0005 && lastC.close < eqHigh && dir==='SHORT') { tags.push('Liquidity Sweep'); score += 10; }
+    if(eqLow && lastC.low < eqLow*0.9995 && lastC.close > eqLow && dir==='LONG') { tags.push('Liquidity Sweep'); score += 10; }
+
+    // ── NEW: Premium / Discount Zone ──
+    // Equilibrium dari range 40 candle terakhir. LONG lebih valid kalau entry di
+    // zona discount (bawah equilibrium), SHORT lebih valid di zona premium (atas).
+    const zc = candles.slice(-40);
+    const zHi = Math.max(...zc.map(c=>c.high)), zLo = Math.min(...zc.map(c=>c.low));
+    const eqPrice = (zHi+zLo)/2;
+    // FIX (berbasis data Score Validation, n=29): Discount Zone ternyata WR 31%
+    // (CI 95%: 17%-49%, secara statistik di bawah 50%) -- dulu dikasih bonus +5,
+    // sekarang dibalik jadi penalti karena datanya bilang sebaliknya dari asumsi
+    // teori awal. Premium Zone datanya masih oke (50-57%), jadi TIDAK diubah.
+    if(price < eqPrice && dir==='LONG')  { tags.push('Discount Zone'); score -= 8; }
+    if(price > eqPrice && dir==='SHORT') { tags.push('Premium Zone'); score += 5; }
+
+    return { tags, score };
+}
+
+/* ── Logic Settings & AI ── */
+function updateSettings() {
+    S.settings.balance = parseFloat(document.getElementById('setBalance').value) || 1000;
+    S.settings.riskPct = parseFloat(document.getElementById('setRisk').value) || 1;
+    saveLocal(); renderSignals();
+}
+function calcPositionSize(slPct) {
+    if(slPct <= 0) return 0;
+    const riskAmt = S.settings.balance * (S.settings.riskPct / 100);
+    return (riskAmt / (slPct / 100)).toFixed(2);
+}
+function updateQTable(sig) {
+    const isWin = sig.result === 'WIN';
+    sig.labels.forEach(lbl => {
+        if(!S.qTable[lbl]) S.qTable[lbl] = {w:0, l:0, wr:50};
+        if(isWin) S.qTable[lbl].w++; else S.qTable[lbl].l++;
+        S.qTable[lbl].wr = (S.qTable[lbl].w / (S.qTable[lbl].w + S.qTable[lbl].l)) * 100;
+    });
+}
+function qAdjustScore(tags) {
+    let adj = 0;
+    tags.forEach(lbl => {
+        if(S.qTable[lbl] && (S.qTable[lbl].w + S.qTable[lbl].l >= 5)) {
+            if(S.qTable[lbl].wr >= 60) adj += 5;
+            else if(S.qTable[lbl].wr < 40) adj -= 5;
+        }
+    }); return adj;
+}
+function updateMarkov(trend) {
+    if (!S.markov.transitions) S.markov.transitions = {};
+    if (S.markov.lastState && S.markov.lastState !== trend) {
+        if (!S.markov.transitions[S.markov.lastState]) S.markov.transitions[S.markov.lastState] = {BULL:0, BEAR:0, NEUTRAL:0};
+        S.markov.transitions[S.markov.lastState][trend]++;
+    }
+    S.markov.lastState = trend;
+    if (S.markov.transitions[trend]) {
+        const tr = S.markov.transitions[trend];
+        S.markov.nextTrend = Object.keys(tr).reduce((a, b) => tr[a] > tr[b] ? a : b);
+    }
+    const badge = document.getElementById('markovBadge');
+    if(badge) badge.textContent = `Markov Next: ${S.markov.nextTrend || 'WAITING'}`;
+}
+
+/* ── Core Engine: Scanner (parametrized by cfg() -- sama logic buat SCALP & SWING) ── */
+async function scanSym(sym) {
+    if (S.signals.some(s=>s.pair===sym)) return;
+    if (Date.now()-(lastSigByPair[sym]||0)<cfg().cooldown || Date.now()-(lastTradeByPair[sym]||0)<cfg().postTradeCooldown) return;
+
+    const openLongs = S.signals.filter(s=>s.dir==='LONG').length;
+    const openShorts = S.signals.filter(s=>s.dir==='SHORT').length;
+
+    try {
+        const [kEntry, kMid, kDaily] = await Promise.all([
+            bFetch(`klines?symbol=${sym}&interval=${cfg().tfEntry}&limit=${cfg().tfEntryLimit}`), 
+            bFetch(`klines?symbol=${sym}&interval=${cfg().tfMid}&limit=${cfg().tfMidLimit}`),
+            bFetch(`klines?symbol=${sym}&interval=${cfg().tfDaily}&limit=${cfg().tfDailyLimit}`)
+        ]);
+        const candles = normK(kEntry); if(candles.length<40) return;
+        const cl = candles.map(c=>c.close); const rawPrice = cl[cl.length-1];
+        
+        const rsi = calcRSI(cl);
+        const bb = calcBB(cl, 20, 2.5); 
+        
+        let dir = null, tierStr = ''; let sc = 40;
+        if(rsi<20){ dir='LONG'; tierStr='T1'; sc+=25;}
+        else if(rsi<30){ dir='LONG'; tierStr='T2'; sc+=18;}
+        else if(rsi>80){ dir='SHORT'; tierStr='T1'; sc+=25;}
+        else if(rsi>70){ dir='SHORT'; tierStr='T2'; sc+=18;}
+        else return; 
+        
+        if (dir==='LONG' && openLongs >= cfg().maxSameDir) return;
+        if (dir==='SHORT' && openShorts >= cfg().maxSameDir) return;
+
+        // 1. BOLLINGER BANDS (GERBANG WAJIB)
+        if (bb && dir) {
+            if (dir === 'SHORT' && rawPrice > bb.upper) return; 
+            if (dir === 'LONG' && rawPrice < bb.lower) return;  
+        } else return; 
+        
+        const smc = findSMC(candles, rawPrice, dir);
+        if(smc.tags.length > 0) { sc += smc.score; }
+        smc.tags.push('BB Safe');
+        
+        // 2. VOLUME SPIKE
+        const vols = candles.map(c => parseFloat(c.volume)); const curVol = vols[vols.length-1];
+        let sumVol = 0; for(let i = vols.length-11; i < vols.length-1; i++) sumVol += vols[i];
+        const avgVol10 = sumVol / 10;
+        const hasVolSpike = (curVol >= avgVol10 * 1.5);
+        
+        // FIX (berbasis data Score Validation, n=80): Vol Spike WR-nya 41.2% dan
+        // trennya turun terus (47%->41%), padahal dia dapet bonus skor TERBESAR
+        // di seluruh sistem (+30, lebih gede dari RSI T1 +25). Bobotnya diturunin
+        // ke +12 -- masih jadi pertimbangan, tapi nggak lagi disproporsional.
+        if (hasVolSpike) { smc.tags.push('Vol Spike 💥'); sc += 12; }
+
+        // 3. TREND FILTER (TF mid & daily ikut cfg() -- 15m/1D buat scalping, 4H/1D buat swing)
+        let midTrend = 'NEUTRAL', dailyTrend = 'NEUTRAL';
+        if (kMid && kMid.length >= 2) midTrend = parseFloat(kMid[kMid.length-1][4]) > parseFloat(kMid[0][4]) ? 'UP' : 'DOWN';
+        if (kDaily && kDaily.length >= 2) dailyTrend = parseFloat(kDaily[kDaily.length-1][4]) > parseFloat(kDaily[0][4]) ? 'UP' : 'DOWN';
+
+        let againstTrend = false;
+        if (dir === 'LONG' && (midTrend === 'DOWN' || dailyTrend === 'DOWN' || S.btcTrend === 'BEAR')) againstTrend = true;
+        if (dir === 'SHORT' && (midTrend === 'UP' || dailyTrend === 'UP' || S.btcTrend === 'BULL')) againstTrend = true;
+
+        // SWING (hardTrendBlock=true): against-trend = hard block, gak ada bypass --
+        // posisi ditahan 1-3 hari, ngelawan tren 4H/1D kelamaan resikonya.
+        // SCALP (hardTrendBlock=false): masih bisa lolos kalau ada Vol Spike, karena
+        // scalping cuma pegang posisi menit-jam jadi masih bisa "curi" gerakan cepat.
+        if (againstTrend) {
+            if (!cfg().hardTrendBlock && hasVolSpike) { sc -= 10; smc.tags.push('⚠️ Against Trend'); }
+            else { return; }
+        }
+
+        // Q-Learning & Markov
+        sc += qAdjustScore(smc.tags);
+        if (S.markov.nextTrend) {
+            if (dir === 'LONG' && S.markov.nextTrend === 'BULL') sc += 5;
+            if (dir === 'SHORT' && S.markov.nextTrend === 'BEAR') sc += 5;
+        }
+
+        // ── Regime Detection (ADX) — RSI mean-reversion lebih valid di market
+        // ranging, lebih rawan "nangkep pisau jatuh" di tren kuat. Ini penyesuaian
+        // skor, BUKAN gerbang wajib, biar sinyal tetap bisa muncul di kondisi apapun.
+        let regimeTag = null;
+        if (S.marketRegime === 'RANGING') { sc += 5; regimeTag = 'Regime: Ranging'; }
+        else if (S.marketRegime === 'DEVELOPING_TREND') { sc -= 5; regimeTag = 'Regime: Developing Trend'; }
+        else if (S.marketRegime === 'STRONG_TREND') { sc -= 15; regimeTag = 'Regime: Strong Trend'; }
+
+        // 4. KASTA SINYAL (TIERING)
+        let finalTier = 'MEDIUM';
+        if (sc >= 80 && hasVolSpike && !againstTrend) finalTier = 'ULTRA_HIGH';
+        else if (sc >= 65 || (hasVolSpike && againstTrend)) finalTier = 'HIGH';
+        else if (sc < 50) return; // Drop jika skor anjlok
+
+        // 5. ATR, SLIPPAGE, & POSITION SIZING (floor/cap/RR ikut cfg() per mode)
+        const atr = calcATR(candles);
+        const atrPctRaw = (atr / rawPrice) * 100;
+        if(atrPctRaw < cfg().atrMin) return; 
+        
+        let slPct = atrPctRaw * cfg().slMult;
+        slPct = Math.max(cfg().slFloor, Math.min(slPct, cfg().slCap)); 
+        const tpPct = slPct * cfg().rr; 
+
+        const entryPrice = dir === 'LONG' ? rawPrice * (1 + (SLIPPAGE_PCT/100)) : rawPrice * (1 - (SLIPPAGE_PCT/100));
+        const tp = dir === 'LONG' ? entryPrice * (1 + (tpPct/100)) : entryPrice * (1 - (tpPct/100));
+        const sl = dir === 'LONG' ? entryPrice * (1 - (slPct/100)) : entryPrice * (1 + (slPct/100));
+
+        const marginSize = calcPositionSize(slPct);
+
+        const sig = {
+            id: gid(), pair: sym, dir: dir, entry: entryPrice,
+            tp: tp, sl: sl, tpPct: tpPct.toFixed(2), slPct: slPct.toFixed(2), leverage: getLeverage(sym),
+            marginSug: marginSize, score: sc, tier: finalTier,
+            labels: regimeTag ? [`RSI ${tierStr}`, ...smc.tags, regimeTag] : [`RSI ${tierStr}`, ...smc.tags],
+            rsiTierStr: tierStr, btcTrend: S.btcTrend, marketRegime: S.marketRegime,
+            entryTime: Date.now(), status: 'OPEN'
+        };
+        
+        S.signals.push(sig); lastSigByPair[sym] = Date.now();
+        save(); renderSignals(); renderHeader(); playTone('NEW_SIGNAL');
+    } catch(e) {}
+}
+
+let scanTimerId = null;
+function restartScanTimer() {
+    if (scanTimerId) clearInterval(scanTimerId);
+    scanTimerId = setInterval(scan, cfg().scanInterval);
+}
+
+// ── SWITCH MODE: inti dari tombol "Ganti ke Swing/Scalping Mode". Nyimpen
+// state mode SEKARANG dulu, baru pindah MODE, reload state (signals/history/
+// qTable/markov/settings) dari storage prefix mode yang baru, reset tracker
+// cooldown in-memory (karena beda strategi = beda ritme, gak relevan dibawa),
+// terus re-render semuanya + restart timer scan sesuai kecepatan mode baru.
+function switchMode() {
+    saveLocal(); // flush state mode lama biar gak ke-skip pas ganti
+    MODE = (MODE === 'SCALP') ? 'SWING' : 'SCALP';
+    localStorage.setItem('ks_mode', MODE);
+
+    const fresh = loadState();
+    S.signals = fresh.signals; S.history = fresh.history; S.qTable = fresh.qTable;
+    S.markov = fresh.markov; S.settings = fresh.settings;
+    lastSigByPair = {}; lastTradeByPair = {};
+
+    JBIN_ID = localStorage.getItem(skey('binid'));
+    if (JBIN_ID === "1" || JBIN_ID === "null") JBIN_ID = null;
+
+    document.getElementById('appTitle').textContent = cfg().label;
+    document.getElementById('appSubtitle').textContent = cfg().badge;
+    document.getElementById('modeToggleLabel').textContent = 'Ganti ke ' + (MODE==='SCALP' ? 'Swing' : 'Scalping') + ' Mode';
+    document.title = cfg().label + ' - ' + cfg().badge;
+    document.getElementById('setBalance').value = S.settings.balance;
+    document.getElementById('setRisk').value = S.settings.riskPct;
+
+    showToast('Mode Diganti', `Sekarang jalan di ${cfg().label} (${MODE})`, 'INFO');
+    renderHeader(); renderSignals();
+    if(currentTab==='history') renderHistory(); if(currentTab==='stats') renderStats();
+    restartScanTimer();
+    loadGHHistory().catch(()=>{});
+}
+
+function updateGhToken() {
+    const v = document.getElementById('setGhToken').value.trim();
+    if (v) localStorage.setItem('gh_token', v); else localStorage.removeItem('gh_token');
+}
+
+async function scan() {
+    if(S.scanning) return; S.scanning = true; 
+    document.getElementById('scanIndicatorText').textContent = 'Scanning...';
+    let hadError = false;
+    try {
+        // FIX: dulu kalau fetch BTC gagal (proxy down), Promise.all reject dan
+        // seluruh scan (termasuk daftar symbol & loop scanning) ikut batal total,
+        // tanpa ada error yang kelihatan di UI. Sekarang kegagalan BTC di-isolasi
+        // biar nggak bikin seluruh siklus scan mati.
+        const [btck, fgres] = await Promise.all([
+            bFetch(`klines?symbol=BTCUSDT&interval=${cfg().btcTf}&limit=${cfg().btcLimit}`).catch(()=>null),
+            fetch(FG_API).then(r=>r.json()).catch(()=>null)
+        ]);
+        if(btck) {
+            const btcCandles = normK(btck);
+            const cl = btcCandles.map(c=>c.close); S.btcPrice = cl[cl.length-1];
+            const newBtcTrend = cl[cl.length-1] > cl[0] ? 'BULL' : 'BEAR';
+            S.btcTrend = newBtcTrend; updateMarkov(newBtcTrend);
+            // ── NEW: Regime detection berbasis ADX BTC — dipakai sebagai penyesuaian
+            // skor (bukan gerbang), biar sinyal RSI mean-reversion lebih hati-hati
+            // pas market lagi trending kuat, tanpa bikin sinyal jadi sepi total.
+            const adx = calcADX(btcCandles);
+            S.marketRegime = getRegime(adx);
+            S.marketADX = adx;
+        } else { hadError = true; }
+
+        if(!S.symbols.length) {
+            try {
+                const t = await bFetch('ticker/24hr');
+                S.symbols = t.filter(x=>x.symbol.endsWith('USDT') && !isB(x.symbol) && +x.quoteVolume>20000000).sort((a,b)=>b.quoteVolume-a.quoteVolume).map(x=>x.symbol).slice(0,100);
+            } catch(e) { hadError = true; }
+        }
+
+        if(S.symbols.length) {
+            for(let i=0; i<S.symbols.length && S.signals.length<cfg().maxSig; i+=5) {
+                await Promise.all(S.symbols.slice(i,i+5).map(s=>scanSym(s).catch(()=>{})));
+                await new Promise(r=>setTimeout(r, 200));
+            }
+        } else { hadError = true; }
+    } catch(e) { hadError = true; }
+    S.scanning = false;
+    if(hadError) {
+        document.getElementById('scanIndicatorText').textContent = 'Proxy/Network Error ⚠️';
+        showToast('Scan Gagal', 'Fetch ke Binance/proxy gagal — cek koneksi atau ganti proxy.', 'LOSS');
+    } else {
+        document.getElementById('scanIndicatorText').textContent = 'Standby';
+    }
+    document.getElementById('lastUpd').textContent = toWIBShort(Date.now());
+    renderHeader(); renderSignals();
+}
+
+async function resolve() {
+    if(!S.signals.length) return;
+    let pm = {}; try { const t = await bFetch('ticker/price'); t.forEach(p=>pm[p.symbol]=+p.price); } catch(e){return;}
+    let rm = [];
+    S.signals.forEach(sig => {
+        const p = pm[sig.pair]; if(!p) return;
+        const isL = sig.dir === 'LONG';
+        sig.currentPrice = p; sig.pnlPct = isL ? (p-sig.entry)/sig.entry*100 : (sig.entry-p)/sig.entry*100;
+
+        // NEW: Breakeven Stop-Loss. Begitu profit floating nyampe BREAKEVEN_TRIGGER_PCT
+        // dari jarak entry->TP, SL digeser ke harga entry. Kalau abis ini harga
+        // balik kena SL, kerugiannya jadi ~0% (bukan -slPct penuh) karena grossPct
+        // sekarang dihitung dari harga real, bukan persentase tetap.
+        if (!sig.beActive) {
+            const tpDist = Math.abs(sig.tp - sig.entry);
+            const curDist = isL ? (p - sig.entry) : (sig.entry - p);
+            if (tpDist > 0 && curDist / tpDist >= BREAKEVEN_TRIGGER_PCT) {
+                sig.sl = sig.entry;
+                sig.beActive = true;
+                showToast(sig.pair, 'SL digeser ke Breakeven 🔒 (profit terkunci)', 'WIN');
+            }
+        }
+
+        if (isL ? p >= sig.tp : p <= sig.tp) { sig.result = 'WIN'; rm.push(sig); } else if (isL ? p <= sig.sl : p >= sig.sl) { sig.result = 'LOSS'; rm.push(sig); }
+    });
+    
+    if(rm.length) {
+        S.signals = S.signals.filter(s => !rm.includes(s));
+        rm.forEach(sig => {
+            sig.closeTime = Date.now();
+            
+            // P&L Net (Potong Fee 0.10% & estimasi Funding 0.01% per 8 Jam)
+            // FIX: dulu grossPct selalu pakai +tpPct/-slPct TETAP, jadi kalau SL
+            // udah digeser ke breakeven, hasilnya tetap kebaca rugi penuh -slPct
+            // padahal harga sebenarnya cuma balik ke sekitar entry. Sekarang pakai
+            // sig.pnlPct (dihitung dari harga real) biar akurat di semua kasus.
+            let grossPct = sig.pnlPct;
+            const durationHrs = (sig.closeTime - sig.entryTime) / (1000 * 60 * 60);
+            const fundingCost = Math.ceil(durationHrs / 8) * 0.01; 
+            const netPct = grossPct - TAKER_FEE_PCT - fundingCost;
+
+            sig.profitPct = netPct; sig.roiPct = calcROI(sig.profitPct, sig.pair);
+            S.history.unshift(sig); lastTradeByPair[sig.pair] = Date.now();
+            updateQTable(sig); 
+
+            showToast(sig.pair, `Closed at ${sig.result==='WIN'?'TP':(sig.beActive?'Breakeven':'SL')} (Net: ${netPct.toFixed(2)}%)`, sig.result);
+            playTone(sig.result); updateLatestTradeBtn(sig); appendTradeToGitHubCSV(sig);
+        });
+        S.history = S.history.slice(0,300); save(); renderSignals(); renderHeader();
+        if(currentTab==='history') renderHistory(); if(currentTab==='stats') renderStats();
+    } else { save(); renderSignals(); }
+}
+
+window.manualResolve = function(id, result) {
+    const idx = S.signals.findIndex(x => x.id === id); if (idx === -1) return;
+    const sig = S.signals.splice(idx, 1)[0]; sig.result = result; sig.closeTime = Date.now();
+    let grossPct = result === 'WIN' ? +sig.tpPct : -sig.slPct;
+    const netPct = grossPct - TAKER_FEE_PCT; sig.profitPct = netPct; sig.roiPct = calcROI(sig.profitPct, sig.pair);
+    
+    S.history.unshift(sig); S.history = S.history.slice(0, 300); lastTradeByPair[sig.pair] = Date.now();
+    updateQTable(sig); showToast(sig.pair, `Closed manually (Net: ${netPct.toFixed(2)}%)`, result); playTone(result); updateLatestTradeBtn(sig); appendTradeToGitHubCSV(sig);
+    save(); renderSignals(); renderHeader(); if(currentTab==='history') renderHistory(); if(currentTab==='stats') renderStats();
+};
+
+/* ── UI Renders ── */
+window.skipSig = function(id) { S.signals = S.signals.filter(s => s.id !== id); save(); renderSignals(); renderHeader(); };
+window.enterSig = function(id) { const s = S.signals.find(x => x.id === id); if (s) { s.entered = true; save(); renderSignals(); } };
+
+function renderHeader() {
+    const elPrice = document.getElementById('btcPrice'); const elTrend = document.getElementById('btcTrendBadge');
+    if(elPrice) elPrice.textContent = '$' + S.btcPrice.toLocaleString('en-US',{maximumFractionDigits:0});
+    if(elTrend) { elTrend.textContent = `● BTC ${S.btcTrend}`; elTrend.className = `text-[10px] font-bold px-2 py-1 rounded ${S.btcTrend==='BULL'?'bg-green-50 text-tertiary':'bg-red-50 text-error'}`; }
+    const elRegime = document.getElementById('regimeBadge');
+    if(elRegime) {
+        const adxStr = S.marketADX!==null && S.marketADX!==undefined ? ` (ADX ${S.marketADX.toFixed(0)})` : '';
+        const regimeMap = {
+            RANGING: {text:'✅ Ranging', cls:'bg-green-50 text-tertiary'},
+            DEVELOPING_TREND: {text:'⚠️ Developing Trend', cls:'bg-yellow-50 text-yellow-700'},
+            STRONG_TREND: {text:'🔥 Strong Trend', cls:'bg-red-50 text-error'},
+            UNKNOWN: {text:'Mendeteksi...', cls:'bg-surface-container'}
+        };
+        const r = regimeMap[S.marketRegime] || regimeMap.UNKNOWN;
+        elRegime.textContent = `Regime: ${r.text}${adxStr}`;
+        elRegime.className = `text-[10px] font-bold px-2 py-1 rounded inline-block ${r.cls}`;
+    }
+    const wins = S.history.filter(t=>t.result==='WIN').length; const losses = S.history.filter(t=>t.result==='LOSS').length;
+    const wr = (wins+losses)>0 ? (wins/(wins+losses)*100).toFixed(1) : 0;
+    document.getElementById('statsBar').innerHTML = `<span class="px-4 py-2 rounded-lg bg-surface-container-lowest border border-outline text-xs font-bold flex items-center gap-2"><span class="w-2 h-2 rounded-full ${wr>=50?'bg-tertiary':'bg-error'}"></span> WR ${wr}%</span><span class="px-4 py-2 rounded-lg bg-surface-container-lowest border border-outline text-xs font-bold text-on-surface-variant">${wins+losses} Trades</span><span class="px-4 py-2 rounded-lg bg-green-50 text-tertiary border border-green-100 text-xs font-bold">🟢 WIN: ${wins}</span><span class="px-4 py-2 rounded-lg bg-red-50 text-error border border-error/20 text-xs font-bold">🔴 LOSS: ${losses}</span>`;
+}
+
+function renderSignals() {
+    const cont = document.getElementById('signals-container'); if(!cont) return;
+    const sorted = [...S.signals].sort((a,b)=>b.score-a.score);
+    if(sorted.length === 0) { cont.innerHTML = `<div class="col-span-full h-64 flex flex-col items-center justify-center bg-surface-container-lowest border border-outline rounded-xl opacity-60"><span class="material-symbols-outlined text-[40px] text-outline-variant mb-2">radar</span><p class="text-sm font-semibold text-on-surface-variant">No active signals.</p></div>`; return; }
+
+    cont.innerHTML = sorted.map((sig, i) => {
+        const isL = sig.dir === 'LONG'; const pnlStr = (sig.pnlPct>=0?'+':'') + (sig.pnlPct||0).toFixed(2) + '%';
+        const isNew = (Date.now()-sig.entryTime) < 60000;
+        const tagsHtml = sig.labels.map(l => {
+            if(l.includes('Manipulation')||l.includes('FVG')) return `<span class="bg-purple-50 text-purple-600 text-[10px] px-2 py-1 rounded border border-purple-100 font-bold">${l}</span>`;
+            if(l.includes('RSI')) return `<span class="bg-blue-50 text-secondary text-[10px] px-2 py-1 rounded border border-blue-100 font-bold">${l}</span>`;
+            if(l.includes('BB Safe')) return `<span class="bg-indigo-50 text-indigo-600 text-[10px] px-2 py-1 rounded border border-indigo-100 font-bold flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">verified_user</span> BB Safe</span>`;
+            if(l.includes('Vol Spike')) return `<span class="bg-orange-50 text-orange-600 text-[10px] px-2 py-1 rounded border border-orange-100 font-bold flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">bolt</span> ${l}</span>`;
+            return `<span class="bg-surface-container text-on-surface-variant text-[10px] px-2 py-1 rounded font-bold">${l}</span>`;
+        }).join('');
+        
+        let marginDisplay = sig.marginSug > 0 ? `$${sig.marginSug}` : '--';
+
+        const actionBtn = sig.entered 
+            ? `<div class="mt-4 pt-3 border-t border-outline flex flex-col gap-2"><div class="text-[11px] flex justify-between items-center"><span class="text-on-surface-variant">${toWIBShort(sig.entryTime)}</span><span class="text-tertiary font-bold">✅ ENTERED</span></div><div class="flex gap-2 mt-1"><button onclick="window.manualResolve('${sig.id}', 'WIN')" class="flex-1 py-1 bg-green-50 text-tertiary border border-green-100 rounded text-[10px] font-bold hover:bg-green-100 cursor-pointer">Hit TP 🟢</button><button onclick="window.manualResolve('${sig.id}', 'LOSS')" class="flex-1 py-1 bg-red-50 text-error border border-red-100 rounded text-[10px] font-bold hover:bg-red-100 cursor-pointer">Hit SL 🔴</button></div></div>`
+            : `<div class="mt-4 pt-3 border-t border-outline flex flex-col gap-2"><div class="flex justify-between items-center px-1"><span class="text-[10px] text-on-surface-variant font-bold uppercase">Margin Sug:</span><span class="text-[11px] font-label-mono font-bold text-on-surface">${marginDisplay}</span></div><div class="flex gap-2"><button onclick="window.enterSig('${sig.id}')" class="flex-1 py-1.5 bg-green-50 text-tertiary border border-green-100 rounded text-xs font-bold hover:bg-green-100 cursor-pointer">ENTRY ${sig.leverage}x</button><button onclick="window.skipSig('${sig.id}')" class="px-3 py-1.5 border border-outline text-on-surface-variant rounded hover:text-error hover:border-error cursor-pointer"><span class="material-symbols-outlined text-[14px]">close</span></button></div></div>`;
+
+        return `
+        <div class="bg-surface-container-lowest border ${isL?'border-l-4 border-l-tertiary':'border-l-4 border-l-error'} rounded-xl p-4 flex flex-col hover-lift relative overflow-hidden">
+            ${isNew ? '<div class="absolute top-0 right-0 bg-secondary text-white text-[9px] font-bold px-3 py-1 rounded-bl-lg">NEW</div>' : ''}
+            <div class="flex justify-between items-start mb-3">
+                <div><h3 class="font-label-mono text-lg font-bold text-on-surface">#${sig.pair.replace('USDT','')}</h3><div class="flex gap-1 mt-1"><span class="px-2 py-0.5 rounded ${isL?'bg-green-50 text-tertiary':'bg-red-50 text-error'} text-[10px] font-bold">${isL?'LONG':'SHORT'}</span><span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px] font-bold">5M</span></div></div>
+                <span class="flex items-center gap-1 text-[10px] font-bold ${sig.tier==='ULTRA_HIGH'?'text-purple-600 bg-purple-50':sig.tier==='HIGH'?'text-yellow-600 bg-yellow-50':'text-secondary bg-blue-50'} px-2 py-1 rounded"><span class="material-symbols-outlined text-[14px]">star</span> ${sig.tier}</span>
+            </div>
+            <div class="flex flex-wrap gap-1 mb-4">${tagsHtml}</div>
+            <div class="space-y-2 mb-4">
+                <div class="flex justify-between text-sm"><span class="text-on-surface-variant">Entry (Inc. Slippage)</span><span class="font-label-mono font-bold">${fmtP(sig.entry)}</span></div>
+                <div class="flex justify-between text-sm"><span class="text-tertiary flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> TP</span><span class="font-label-mono font-bold text-tertiary">${fmtP(sig.tp)} <span class="text-[10px] opacity-70">+${sig.tpPct}%</span></span></div>
+                <div class="flex justify-between text-sm"><span class="text-error flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-error"></span> SL (ATR)</span><span class="font-label-mono font-bold text-error">${fmtP(sig.sl)} <span class="text-[10px] opacity-70">-${sig.slPct}%</span></span></div>
+            </div>
+            <div class="mb-2"><div class="flex justify-between items-center mb-1"><span class="text-xs font-bold text-on-surface-variant">AI Score</span><span class="text-xs font-bold text-secondary">${sig.score}</span></div><div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden"><div class="h-full bg-secondary rounded-full" style="width: ${Math.min(sig.score, 100)}%"></div></div></div>
+            <div class="flex justify-between items-end mt-2"><div class="text-[10px] text-on-surface-variant">Live P&L</div><div class="font-label-mono font-bold ${sig.pnlPct>=0?'text-tertiary':'text-error'}">${pnlStr}</div></div>
+            ${actionBtn}
+        </div>`;
+    }).join('');
+}
+
+function srtH(k){S.histSort={key:k,dir:S.histSort.key===k&&S.histSort.dir==='desc'?'asc':'desc'};renderHistory();}
+function setHF(f){ S.histFilter=f; ['ALL','WIN','LOSS'].forEach(x => { const btn = document.getElementById('btn-hf-'+x.toLowerCase()); if(btn) btn.className = f===x ? "px-4 py-1.5 text-xs font-semibold bg-surface-container rounded shadow-sm text-on-surface" : "px-4 py-1.5 text-xs font-semibold text-on-surface-variant hover:bg-surface-container rounded transition-all"; }); renderHistory(); }
+
+function renderHistory() {
+    const tbody = document.getElementById('history-table-body'); if(!tbody) return;
+    let trades = [...S.history]; if(S.histFilter!=='ALL') trades = trades.filter(t=>t.result===S.histFilter);
+    const key = S.histSort.key, dir = S.histSort.dir;
+    trades.sort((a,b) => { let av=a[key], bv=b[key]; if(typeof av==='string'){av=av.toLowerCase();bv=(bv||'').toLowerCase();} return dir==='asc' ? (av>bv?1:av<bv?-1:0) : (av<bv?1:av>bv?-1:0); });
+    if(trades.length === 0) { tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-12 text-center text-sm text-on-surface-variant">No history records found.</td></tr>'; } 
+    else {
+        tbody.innerHTML = trades.map(t => {
+            const isL = t.dir === 'LONG'; const roi = +(t.roiPct||0); const isWin = t.result === 'WIN';
+            return `<tr class="hover:bg-surface-container-low transition-colors cursor-default group border-l-2 ${isWin?'border-l-tertiary':'border-l-error'}">
+                <td class="px-4 py-3 font-label-mono font-bold text-[13px] text-on-surface">#${t.pair.replace('USDT','')}</td>
+                <td class="px-4 py-3"><span class="${isL?'text-tertiary':'text-error'} font-bold text-[11px] flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">${isL?'arrow_upward':'arrow_downward'}</span> ${t.dir}</span></td>
+                <td class="px-4 py-3 text-right font-label-mono text-[12px]">${fmtP(t.entry)}</td>
+                <td class="px-4 py-3 text-right font-label-mono text-[12px]"><div class="text-tertiary">${fmtP(t.tp)}</div><div class="text-error">${fmtP(t.sl)}</div></td>
+                <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${isWin?'bg-green-50 text-tertiary':'bg-red-50 text-error'} uppercase">${isWin ? '🟢 WIN' : '🔴 LOSS'}</span></td>
+                <td class="px-4 py-3 text-right"><div class="font-label-mono font-bold text-[12px] ${isWin?'text-tertiary':'text-error'}">${isWin?'+':''}${roi.toFixed(1)}%</div><div class="text-[9px] text-on-surface-variant">${t.leverage}x</div></td>
+                <td class="px-4 py-3 text-center font-label-mono text-[12px] text-on-surface-variant">${t.score||'—'}</td>
+                <td class="px-4 py-3 font-label-mono text-[11px] text-on-surface-variant">${toWIBShort(t.closeTime)}</td>
+                <td class="px-4 py-3"><div class="flex flex-wrap gap-1 w-32">${(t.labels||[]).slice(0,2).map(l=>`<span class="px-1.5 py-0.5 rounded border border-outline bg-surface-container-low text-[9px] font-bold text-on-surface-variant">${l}</span>`).join('')}</div></td>
+            </tr>`;
+        }).join('');
+    }
+}
+
+let calViewYear = new Date().getFullYear(), calViewMonth = new Date().getMonth();
+function navCal(d){ calViewMonth+=d; if(calViewMonth>11){calViewMonth=0;calViewYear++;} if(calViewMonth<0){calViewMonth=11;calViewYear--;} renderStats(); }
+
+function renderStats() {
+    const tr = S.history;
+    const w = tr.filter(t=>t.result==='WIN').length; 
+    const l = tr.filter(t=>t.result==='LOSS').length; 
+    const tot = w+l; 
+    const wr = tot>0 ? Math.round(w/tot*100) : 0;
+    
+    // 1. Overall Pie
+    const pie = document.getElementById('stat-overall-pie');
+    if(pie) {
+        const off = 440 - (wr/100)*440;
+        pie.innerHTML = `<div class="relative w-40 h-40 flex items-center justify-center"><svg class="w-full h-full -rotate-90"><circle cx="80" cy="80" fill="none" r="70" stroke="#f1f5f9" stroke-width="12"></circle><circle cx="80" cy="80" fill="none" r="70" stroke="#10B981" stroke-dasharray="440" stroke-dashoffset="${off}" stroke-width="12" stroke-linecap="round"></circle></svg><div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-2xl font-display font-bold text-tertiary">${wr}%</span><span class="text-[10px] font-bold text-on-surface-variant">Win Rate</span></div></div><div class="w-full mt-6 text-left space-y-2 pt-4 border-t border-outline"><div class="flex justify-between items-center"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-tertiary"></span><span class="text-sm font-semibold text-on-surface">🟢 WIN</span></div><span class="font-label-mono font-bold text-tertiary">${w}</span></div><div class="flex justify-between items-center"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-error"></span><span class="text-sm font-semibold text-on-surface">🔴 LOSS</span></div><span class="font-label-mono font-bold text-error">${l}</span></div></div>`;
+    }
+
+    // 1b. Daily Win Rate (Hari Ini, basis WIB) — mirror dari Overall Pie di atas, cuma datanya difilter ke hari ini aja
+    const todayKey = wibDateKey(Date.now());
+    const trToday = tr.filter(t => wibDateKey(t.closeTime || t.entryTime) === todayKey);
+    const wD = trToday.filter(t=>t.result==='WIN').length;
+    const lD = trToday.filter(t=>t.result==='LOSS').length;
+    const totD = wD+lD;
+    const wrD = totD>0 ? Math.round(wD/totD*100) : 0;
+    const dailyPie = document.getElementById('stat-daily-pie');
+    if(dailyPie) {
+        if(totD === 0) {
+            dailyPie.innerHTML = `<div class="w-40 h-40 flex flex-col items-center justify-center text-center"><span class="material-symbols-outlined text-[32px] text-outline-variant mb-2">hourglass_empty</span><span class="text-xs font-semibold text-on-surface-variant">Belum ada trade closed hari ini</span></div>`;
+        } else {
+            const offD = 440 - (wrD/100)*440;
+            dailyPie.innerHTML = `<div class="relative w-40 h-40 flex items-center justify-center"><svg class="w-full h-full -rotate-90"><circle cx="80" cy="80" fill="none" r="70" stroke="#f1f5f9" stroke-width="12"></circle><circle cx="80" cy="80" fill="none" r="70" stroke="#3B82F6" stroke-dasharray="440" stroke-dashoffset="${offD}" stroke-width="12" stroke-linecap="round"></circle></svg><div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-2xl font-display font-bold text-secondary">${wrD}%</span><span class="text-[10px] font-bold text-on-surface-variant">Hari Ini</span></div></div><div class="w-full mt-6 text-left space-y-2 pt-4 border-t border-outline"><div class="flex justify-between items-center"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-tertiary"></span><span class="text-sm font-semibold text-on-surface">🟢 WIN</span></div><span class="font-label-mono font-bold text-tertiary">${wD}</span></div><div class="flex justify-between items-center"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-error"></span><span class="text-sm font-semibold text-on-surface">🔴 LOSS</span></div><span class="font-label-mono font-bold text-error">${lD}</span></div></div>`;
+        }
+    }
+
+    // 1c. Score Validation: win-rate per tier & per RSI tier, buat cek apakah skor AI beneran ada edge-nya
+    const tierVal = document.getElementById('stat-tier-validation');
+    if(tierVal) {
+        const tiers = ['ULTRA_HIGH','HIGH','MEDIUM'];
+        tierVal.innerHTML = tiers.map(tName => {
+            const sub = tr.filter(t=>t.tier===tName);
+            const sw = sub.filter(t=>t.result==='WIN').length, sl = sub.filter(t=>t.result==='LOSS').length;
+            const stot = sw+sl, swr = stot>0 ? Math.round(sw/stot*100) : null;
+            return `<div class="flex items-center justify-between"><span class="text-xs font-bold text-on-surface w-28">${tName}</span><div class="flex-1 flex items-center gap-2 px-2"><div class="flex-1 h-1.5 bg-surface-container rounded-full overflow-hidden"><div class="h-full ${swr===null?'bg-outline-variant':swr>=50?'bg-tertiary':'bg-error'}" style="width:${swr||0}%"></div></div><span class="text-[10px] font-bold ${swr===null?'text-on-surface-variant':swr>=50?'text-tertiary':'text-error'} w-16 text-right">${swr===null?'n/a':swr+'% (n='+stot+')'}</span></div></div>`;
+        }).join('');
+    }
+    const rsiVal = document.getElementById('stat-rsitier-validation');
+    if(rsiVal) {
+        const rTiers = ['T1','T2'];
+        rsiVal.innerHTML = rTiers.map(rName => {
+            const sub = tr.filter(t=>t.rsiTierStr===rName);
+            const sw = sub.filter(t=>t.result==='WIN').length, sl = sub.filter(t=>t.result==='LOSS').length;
+            const stot = sw+sl, swr = stot>0 ? Math.round(sw/stot*100) : null;
+            const label = rName==='T1' ? 'T1 (RSI<20 / >80)' : 'T2 (RSI<30 / >70)';
+            return `<div class="flex items-center justify-between"><span class="text-xs font-bold text-on-surface w-28">${label}</span><div class="flex-1 flex items-center gap-2 px-2"><div class="flex-1 h-1.5 bg-surface-container rounded-full overflow-hidden"><div class="h-full ${swr===null?'bg-outline-variant':swr>=50?'bg-tertiary':'bg-error'}" style="width:${swr||0}%"></div></div><span class="text-[10px] font-bold ${swr===null?'text-on-surface-variant':swr>=50?'text-tertiary':'text-error'} w-16 text-right">${swr===null?'n/a':swr+'% (n='+stot+')'}</span></div></div>`;
+        }).join('');
+    }
+    const slSizeVal = document.getElementById('stat-slsize-validation');
+    if(slSizeVal) {
+        // Bucket berdasarkan slPct: dekat floor lama (<=1.2%), menengah (1.2-2.5%), lebar (>2.5%)
+        const buckets = [
+            {label:'≤1.2% (dekat floor)', test:s=>s<=1.2},
+            {label:'1.2%-2.5%', test:s=>s>1.2 && s<=2.5},
+            {label:'>2.5% (ATR lebar)', test:s=>s>2.5},
+        ];
+        slSizeVal.innerHTML = buckets.map(b => {
+            const sub = tr.filter(t=>{ const s=+t.slPct; return !isNaN(s) && b.test(s); });
+            const sw = sub.filter(t=>t.result==='WIN').length, sl = sub.filter(t=>t.result==='LOSS').length;
+            const stot = sw+sl, swr = stot>0 ? Math.round(sw/stot*100) : null;
+            return `<div class="flex items-center justify-between"><span class="text-xs font-bold text-on-surface w-28">${b.label}</span><div class="flex-1 flex items-center gap-2 px-2"><div class="flex-1 h-1.5 bg-surface-container rounded-full overflow-hidden"><div class="h-full ${swr===null?'bg-outline-variant':swr>=50?'bg-tertiary':'bg-error'}" style="width:${swr||0}%"></div></div><span class="text-[10px] font-bold ${swr===null?'text-on-surface-variant':swr>=50?'text-tertiary':'text-error'} w-16 text-right">${swr===null?'n/a':swr+'% (n='+stot+')'}</span></div></div>`;
+        }).join('');
+    }
+    const tCont = document.getElementById('stat-smc-tech');
+    if(tCont) {
+        const tagStats = {};
+        tr.forEach(t => (t.labels||[]).filter(tag => !/^\d+$/.test(tag)).forEach(tag => {
+            if(!tagStats[tag]) tagStats[tag] = {w:0, l:0};
+            if(t.result==='WIN') tagStats[tag].w++; else if(t.result==='LOSS') tagStats[tag].l++;
+        }));
+        const entries = Object.entries(tagStats).filter(([,v])=>v.w+v.l>0).sort((a,b)=>(b[1].w+b[1].l)-(a[1].w+a[1].l));
+        tCont.innerHTML = entries.map(([tag, v]) => {
+            const stot = v.w+v.l, swr = Math.round(v.w/stot*100);
+            return `<div class="p-3 rounded-lg border border-outline bg-surface-container-low"><div class="flex justify-between items-center mb-1"><span class="text-xs font-bold text-on-surface">${tag}</span><span class="text-[10px] font-bold ${swr>=50?'text-tertiary':'text-error'}">${swr}%</span></div><div class="h-1.5 bg-surface-container rounded-full overflow-hidden"><div class="h-full ${swr>=50?'bg-tertiary':'bg-error'}" style="width:${swr}%"></div></div><div class="text-[9px] text-on-surface-variant mt-1">${v.w}W / ${v.l}L (n=${stot})</div></div>`;
+        }).join('') || '<div class="text-xs text-on-surface-variant text-center">Data SMC/indikator belum mencukupi</div>';
+    }
+
+    // 2. Best Pairs
+    const byP = {};
+    tr.forEach(t => {
+        const p = t.pair.replace('USDT','');
+        if(!byP[p]) byP[p] = {w:0, l:0, roi:0};
+        if(t.result === 'WIN') byP[p].w++; else if(t.result === 'LOSS') byP[p].l++;
+        byP[p].roi += (+(t.roiPct||0));
+    });
+    const topPairs = Object.entries(byP).map(e => ({p:e[0], w:e[1].w, l:e[1].l, wr:(e[1].w+e[1].l)>0?Math.round(e[1].w/(e[1].w+e[1].l)*100):0, roi:e[1].roi}))
+        .filter(c => c.w+c.l >= 1).sort((a,b) => b.wr - a.wr || b.roi - a.roi).slice(0,5);
+    
+    const tpCont = document.getElementById('stat-top-pairs');
+    if(tpCont) {
+        tpCont.innerHTML = topPairs.length ? topPairs.map((p,i) => `<div class="flex items-center justify-between pb-2 border-b border-outline last:border-0"><span class="text-xs font-bold text-on-surface w-16">${i+1}. ${p.p}</span><div class="flex-1 flex items-center gap-2 px-2"><div class="flex-1 h-1.5 ${p.wr>=50?'bg-green-50':'bg-red-50'} rounded-full overflow-hidden"><div class="h-full ${p.wr>=50?'bg-tertiary':'bg-error'}" style="width: ${p.wr}%;"></div></div><span class="text-[10px] font-bold ${p.wr>=50?'text-tertiary':'text-error'} w-8 text-right">${p.wr}%</span></div><span class="text-[10px] text-on-surface-variant font-label-mono w-16 text-right">${p.roi>=0?'+':''}${p.roi.toFixed(1)}%</span></div>`).join('') : '<div class="text-xs text-on-surface-variant text-center mt-8">Belum ada data trading</div>';
+    }
+
+    // 3. Hourly P&L
+    const byH = Array(24).fill().map(()=>({w:0,l:0}));
+    // FIX: dulu pakai new Date(ts).getHours() yang ngikutin timezone browser,
+    // bukan WIB eksplisit -- padahal card-nya dilabelin "(WIB)". Sekarang pakai
+    // wibHour() biar konsisten bener WIB nya, apapun timezone device/browser-nya.
+    tr.forEach(t=>{ const ts = t.closeTime||t.entryTime; if(!ts)return; const h=wibHour(ts); if(t.result==='WIN')byH[h].w++; else if(t.result==='LOSS')byH[h].l++; });
+    const hCont = document.getElementById('stat-hourly-bars');
+    if(hCont) {
+        hCont.innerHTML = byH.map((d,h)=>{ const total = d.w+d.l; const hwr = total>0 ? Math.round(d.w/total*100) : 0; const hpx = total ? Math.max((hwr/100)*100, 10) : 0; const col = hwr>=50?'#10B981':'#EF4444'; return `<div class="flex-1 rounded-t-sm hover:opacity-80 transition-opacity" style="background:${total?col:'#f1f5f9'}; height:${total?hpx+'%':'5px'}" title="Jam ${h}:00 WIB - ${hwr}% WR (${total} trades)"></div>`; }).join('');
+    }
+    // NEW: detail grid biar win-rate & jumlah trade per jam kebaca jelas, nggak
+    // cuma lewat tooltip hover doang.
+    const hDetail = document.getElementById('stat-hourly-detail');
+    if(hDetail) {
+        const activeHours = byH.map((d,h)=>({h, ...d, total:d.w+d.l})).filter(x=>x.total>0);
+        hDetail.innerHTML = activeHours.length ? activeHours.map(x=>{
+            const wr = Math.round(x.w/x.total*100);
+            return `<div class="p-2 rounded-lg border border-outline bg-surface-container-low text-center"><div class="text-[10px] font-bold text-on-surface-variant font-label-mono">${String(x.h).padStart(2,'0')}:00</div><div class="text-sm font-bold ${wr>=50?'text-tertiary':'text-error'}">${wr}%</div><div class="text-[9px] text-on-surface-variant">${x.w}W/${x.l}L (n=${x.total})</div></div>`;
+        }).join('') : '<div class="col-span-full text-xs text-on-surface-variant text-center">Belum ada trade closed</div>';
+    }
+
+    // 4. Calendar Generation
+    const calGrid = document.getElementById('stat-calendar-grid');
+    const calTitle = document.getElementById('calMonthYear');
+    if (calGrid && calTitle) {
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        calTitle.textContent = `${monthNames[calViewMonth]} ${calViewYear}`;
+        
+        const firstDay = new Date(calViewYear, calViewMonth, 1).getDay();
+        const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+        
+        // Cek data trading harian
+        const dailyData = {};
+        tr.forEach(t => {
+            const d = new Date(t.closeTime || t.entryTime);
+            if (d.getFullYear() === calViewYear && d.getMonth() === calViewMonth) {
+                const day = d.getDate();
+                if (!dailyData[day]) dailyData[day] = { w: 0, l: 0, pnl: 0 };
+                if (t.result === 'WIN') dailyData[day].w++;
+                else if (t.result === 'LOSS') dailyData[day].l++;
+                dailyData[day].pnl += (+(t.roiPct || 0));
+            }
+        });
+
+        let calHtml = '';
+        // Kotak kosong awal bulan
+        for (let i = 0; i < firstDay; i++) { 
+            calHtml += `<div class="aspect-square rounded-lg bg-surface-container-low opacity-50"></div>`; 
+        }
+        
+        // Kotak isi tanggal
+        for (let i = 1; i <= daysInMonth; i++) {
+            const data = dailyData[i];
+            let bgClass = 'bg-surface-container-lowest border border-outline';
+            let textClass = 'text-on-surface-variant';
+            let pnlStr = '';
+            
+            if (data && (data.w > 0 || data.l > 0)) {
+                if (data.pnl > 0) { 
+                    bgClass = 'bg-green-50 border border-green-200'; 
+                    textClass = 'text-tertiary'; 
+                } else if (data.pnl < 0) { 
+                    bgClass = 'bg-red-50 border border-red-200'; 
+                    textClass = 'text-error'; 
+                }
+                pnlStr = `<div class="text-[9px] font-bold ${textClass} mt-1">${data.pnl >= 0 ? '+' : ''}${data.pnl.toFixed(1)}%</div>`;
+            }
+            
+            calHtml += `
+            <div class="${bgClass} aspect-square rounded-lg flex flex-col items-center justify-center p-1 cursor-default transition-transform hover:-translate-y-1">
+                <span class="text-[11px] font-semibold text-on-surface">${i}</span>
+                ${pnlStr}
+            </div>`;
+        }
+        calGrid.innerHTML = calHtml;
+    }
+}
+
+async function refreshNews() {
+    const cont = document.getElementById('news-container'); if(!cont) return;
+    cont.innerHTML = '<div class="flex justify-center p-4"><span class="spinner material-symbols-outlined text-secondary">sync</span></div>';
+    try {
+        const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.coindesk.com%2Farc%2Foutboundfeeds%2Frss%2F', { signal: AbortSignal.timeout(6000) });
+        if (!r.ok) throw new Error(); const data = await r.json();
+        if(data && data.items && data.items.length) {
+            cont.innerHTML = data.items.slice(0, 4).map((n, i) => {
+                const txt = (n.title + ' ' + n.description).toLowerCase();
+                let imp = 'LOW'; if(txt.includes('sec') || txt.includes('fomc') || txt.includes('cpi') || txt.includes('fed')) imp = 'HIGH'; else if(txt.includes('hack') || txt.includes('exploit') || txt.includes('ban')) imp = 'MED';
+                let sent = 'NEUTRAL'; if(txt.includes('surge') || txt.includes('bull') || txt.includes('pump') || txt.includes('green')) sent = 'BULLISH'; else if(txt.includes('drop') || txt.includes('crash') || txt.includes('dump') || txt.includes('bear')) sent = 'BEARISH';
+                return `<div class="pb-3 border-b border-outline last:border-0 cursor-pointer hover:opacity-70 transition-opacity animate-fade-up" style="animation-delay: ${(i+1)*50}ms" onclick="window.open('${n.link}','_blank')"><div class="flex justify-between items-center mb-1.5"><span class="px-2 py-0.5 rounded ${sent==='BULLISH'?'bg-green-50 text-tertiary':sent==='BEARISH'?'bg-red-50 text-error':'bg-surface-container text-on-surface-variant'} text-[9px] font-bold uppercase tracking-wider">${sent}</span><span class="text-[9px] text-on-surface-variant font-label-mono">${Math.round((Date.now()-new Date(n.pubDate).getTime())/60000)}m ago</span></div><h4 class="text-[11px] font-bold text-on-surface leading-snug line-clamp-2">${n.title}</h4></div>`;
+            }).join('');
+        } else throw new Error();
+    } catch(e) { cont.innerHTML = `<div class="text-center py-4 text-on-surface-variant"><p class="text-xs text-error">⚠️ Gagal Memuat Berita Live</p></div>`; }
+}
+
+async function init() {
+    switchTab('dashboard');
+    document.getElementById('appTitle').textContent = cfg().label;
+    document.getElementById('appSubtitle').textContent = cfg().badge;
+    document.getElementById('modeToggleLabel').textContent = 'Ganti ke ' + (MODE==='SCALP' ? 'Swing' : 'Scalping') + ' Mode';
+    document.title = cfg().label + ' - ' + cfg().badge;
+    document.getElementById('setBalance').value = S.settings.balance;
+    document.getElementById('setRisk').value = S.settings.riskPct;
+    document.getElementById('setGhToken').value = localStorage.getItem('gh_token') || '';
+    document.getElementById('cloudStatus').innerHTML = '☁️ Initializing...';
+
+    // ── ONE-TIME CLEANUP: buang label numerik/timestamp nyasar dari data yang
+    // sudah kesimpan (baik di S.history maupun S.qTable), akibat bug parsing CSV
+    // lama (kolom geser). Biar History tab & Score Validation langsung bersih
+    // tanpa perlu re-sync manual.
+    let cleaned = false;
+    S.history.forEach(t => {
+        if (t.labels && t.labels.some(l => /^\d+$/.test(l))) {
+            t.labels = t.labels.filter(l => !/^\d+$/.test(l));
+            cleaned = true;
+        }
+    });
+    Object.keys(S.qTable).forEach(k => {
+        if (/^\d+$/.test(k)) { delete S.qTable[k]; cleaned = true; }
+    });
+    if (cleaned) { saveLocal(); console.warn('Cleanup: label numerik sampah sudah dibuang dari history & qTable.'); }
+
+    try { await loadGHHistory(); } catch(e){}
+    try { await refreshNews(); } catch(e){}
+    scan(); restartScanTimer(); setInterval(resolve, 15000); setInterval(refreshNews, 15*60000);
+}
+init();
+</script>
+</body>
+</html>
