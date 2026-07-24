@@ -1,3 +1,4 @@
 id,pair,dir,entry,tp,sl,tpPct,slPct,result,profitPct,roiPct,leverage,rsiTier,score,tier,labels,entryTime,closeTime
 
 "j0kb8zqbt0s","LAUSDT","LONG",0.06925461,0.07365008,0.06925461,"6.40","4.00","LOSS",-0.3726539951636415,-5.59,15,"T1",78,"HIGH","RSI 59|FVG|Chandelier Sniper 🔫|EMA200 Bull 🧭|Vol 1.5x 🚀|⚠️ Retail Trap",1784863278243,1784866689699
+"0tlpazcbz2k","NBISUSDT","SHORT",216.21184,210.465472,216.21184,"2.71","1.69","WIN",7.05437120927328,105.82,15,"T1",80,"HIGH","RSI 44|Chandelier Sniper 🔫|EMA200 Bear 🧭|Vol 5.4x 🚀",1784863122551,1784906629540
