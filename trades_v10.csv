@@ -1,3 +1,4 @@
 id,pair,dir,entry,tp,sl,tpPct,slPct,result,profitPct,roiPct,leverage,rsiTier,score,tier,labels,entryTime,closeTime
 
 "1zzm5g4agvc","KOMAUSDT","LONG",0.014413203,0.015327984000000001,0.014413203,"6.40","4.00","WIN",14.670038829675818,220.05,15,"T1",95,"ULTRA_HIGH","RSI 62|Chandelier Sniper 🔫|EMA200 Bull 🧭|Vol 2.0x 🚀|OI Expansion 🔥",1785463692410,1785464236883
+"ffsjcrqag4w","ONUSDT","LONG",0.24078033,0.25606224000000005,0.2310336,"6.40","4.00","LOSS",-5.400261874796828,-81,15,"T1",125,"ULTRA_HIGH","RSI 64|Chandelier Sniper 🔫|EMA200 Bull 🧭|Vol 1.9x 🚀|OI Expansion 🔥",1785466632509,1785467146621
