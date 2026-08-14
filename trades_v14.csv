@@ -1,3 +1,4 @@
 id,pair,dir,entry,tp,sl,tpPct,slPct,result,profitPct,roiPct,leverage,rsiTier,score,tier,labels,entryTime,closeTime
 
 "106nowbc3ay","BANKUSDT","SHORT",0.03684157,0.035990104,0.03752348,"2.36","1.80","LOSS",-2.005766114201973,-30.09,15,"undefined",80,"HIGH","RSI 38|Chandelier Sniper 🔫|Vol 4.0x 🚀",1786685256005,1786696924170
+"da8tokvuhhv","BRUSDT","LONG",0.25042515,0.25999,0.24629520000000002,"3.87","1.60","LOSS",-2.282445539116172,-34.24,15,"T1",88,"ULTRA_HIGH","RSI 43|Manipulation|SMC Sniper 🎯|Liquidity Sweep 🎯|Vol 1.9x 🚀|⚠️ Retail Trap|🛡️ Killzone Shield",1786698678384,1786698888966
